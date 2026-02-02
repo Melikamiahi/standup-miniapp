@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Standup Randomizer</title>
+  <script src="https://tapi.bale.ai/miniapp.js?3"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.07);
+      --border-active: rgba(56,189,248,0.25);
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+      --text-muted: #475569;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --accent-3: #c084fc;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    /* Background effects */
+    .bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(56,189,248,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.025) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .bg-glow {
+      position: fixed; top: -250px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; pointer-events: none; z-index: 0;
+      background: radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%);
+    }
+
+    .container {
+      max-width: 480px; margin: 0 auto;
+      padding: 24px 16px 40px; position: relative; z-index: 1;
+    }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 32px; }
+    .badge {
+      display: inline-block; padding: 5px 14px;
+      background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 100px; font-size: 11px; font-weight: 700;
+      color: var(--accent); letter-spacing: 0.3px; margin-bottom: 12px;
+    }
+    .title {
+      font-size: 28px; font-weight: 800; color: #f1f5f9;
+      letter-spacing: -0.5px; line-height: 1.3; margin-bottom: 6px;
+    }
+    .subtitle { font-size: 13px; color: var(--text-dim); font-weight: 400; }
+
+    /* Section */
+    .section { margin-bottom: 24px; }
+    .section-label {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      margin-bottom: 10px; padding: 0 2px;
+    }
+
+    /* Input Row */
+    .input-row { display: flex; gap: 8px; align-items: center; }
+    .input-row input {
+      flex: 1; padding: 13px 16px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 14px;
+      outline: none; direction: rtl; transition: border 0.2s;
+      font-family: inherit;
+    }
+    .input-row input:focus { border-color: var(--border-active); }
+    .input-row input::placeholder { color: var(--text-muted); }
+    .btn-add {
+      padding: 13px 20px;
+      background: linear-gradient(135deg, var(--accent), #2563eb);
+      border: none; border-radius: 12px; color: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; font-family: inherit;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-add:active { transform: scale(0.96); opacity: 0.9; }
+
+    /* Member List */
+    .member-list { display: flex; flex-direction: column; gap: 4px; }
+    .member-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+      transition: background 0.2s;
+      animation: fadeSlideIn 0.25s ease-out;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .member-emoji { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+    .member-name { flex: 1; font-size: 14px; font-weight: 500; color: #cbd5e1; }
+    .member-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 4px 6px; border-radius: 6px; font-size: 13px;
+      transition: opacity 0.15s; opacity: 0.5;
+    }
+    .member-btn:active { opacity: 1; }
+    .member-btn.edit { color: var(--text-dim); }
+    .member-btn.delete { color: var(--danger); }
+    .edit-input {
+      flex: 1; padding: 5px 10px;
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border-active);
+      border-radius: 8px; color: var(--text); font-size: 13px;
+      font-family: inherit; direction: rtl; outline: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center; padding: 36px 20px; color: var(--text-muted);
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-text { font-size: 13px; }
+
+    /* Settings */
+    .settings-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .settings-label { font-size: 13px; color: #94a3b8; flex: 1; }
+    .settings-select {
+      padding: 7px 10px; background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 12px; font-family: inherit;
+      cursor: pointer; direction: ltr;
+    }
+
+    /* Shuffle Button */
+    .btn-shuffle {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--accent-3));
+      border: none; border-radius: 14px; color: #fff;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      font-family: inherit; letter-spacing: -0.3px;
+      transition: transform 0.2s, opacity 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-shuffle:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-shuffle.disabled {
+      background: rgba(255,255,255,0.05); color: var(--text-muted);
+      cursor: not-allowed; pointer-events: none;
+    }
+    .btn-shuffle .shimmer {
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* Active Standup Card */
+    .active-card {
+      background: rgba(56,189,248,0.04);
+      border: 1px solid rgba(56,189,248,0.12);
+      border-radius: 18px; padding: 28px 20px;
+      text-align: center; margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .active-glow {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 250px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      transition: background 0.5s;
+    }
+    .active-glow.overtime {
+      background: linear-gradient(90deg, transparent, var(--danger), transparent);
+    }
+    .active-emoji { font-size: 32px; margin-bottom: 6px; }
+    .active-name {
+      font-size: 26px; font-weight: 800; color: #f1f5f9; margin-bottom: 2px;
+    }
+    .active-count { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
+    .timer-display {
+      font-size: 42px; font-weight: 800; color: var(--accent);
+      font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace;
+      direction: ltr; margin-bottom: 6px; transition: color 0.5s;
+    }
+    .timer-display.warning { color: var(--warning); }
+    .timer-display.overtime { color: var(--danger); }
+    .progress-bar {
+      height: 3px; background: rgba(255,255,255,0.06);
+      border-radius: 100px; overflow: hidden; margin-bottom: 20px;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 1s linear, background 0.5s;
+    }
+    .progress-fill.warning { background: var(--warning); }
+    .progress-fill.overtime { background: var(--danger); }
+
+    /* Button Row */
+    .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .btn-action {
+      padding: 11px 22px; border-radius: 11px; border: none;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s; font-family: inherit;
+    }
+    .btn-action:active { transform: scale(0.96); opacity: 0.9; }
+    .btn-next {
+      background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff;
+    }
+    .btn-skip {
+      background: rgba(255,255,255,0.06); color: #94a3b8;
+      border: 1px solid var(--border);
+    }
+    .btn-pause {
+      background: rgba(255,255,255,0.06); color: #94a3b8;
+      border: 1px solid var(--border); min-width: 44px;
+    }
+
+    /* Queue */
+    .queue-list { display: flex; flex-direction: column; gap: 3px; }
+    .queue-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 9px;
+      background: var(--bg-card); border: 1px solid transparent;
+      transition: all 0.3s;
+    }
+    .queue-item.active {
+      background: rgba(56,189,248,0.06);
+      border-color: rgba(56,189,248,0.18);
+    }
+    .queue-item.done { opacity: 0.35; }
+    .queue-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); color: var(--text-dim);
+    }
+    .queue-num.active { background: rgba(56,189,248,0.18); color: var(--accent); }
+    .queue-name { font-size: 13px; font-weight: 500; color: #94a3b8; flex: 1; }
+    .queue-name.active { font-weight: 700; color: #f1f5f9; }
+    .queue-badge {
+      font-size: 10px; color: var(--accent); font-weight: 600;
+      background: rgba(56,189,248,0.1); padding: 2px 8px;
+      border-radius: 100px;
+    }
+    .done-check { font-size: 12px; color: var(--success); }
+
+    /* Reset */
+    .btn-reset {
+      display: block; margin: 10px auto 0; background: none; border: none;
+      color: var(--text-dim); font-size: 11px; cursor: pointer;
+      padding: 8px 14px; border-radius: 8px; font-family: inherit;
+    }
+    .btn-reset:active { color: var(--danger); }
+
+    /* Shuffle Overlay */
+    .shuffle-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .shuffle-card { text-align: center; padding: 40px; }
+    .shuffle-label {
+      font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 14px;
+    }
+    .shuffle-names { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .shuffle-name { font-size: 18px; font-weight: 700; color: #f1f5f9; padding: 3px 12px; }
+
+    /* Summary Card */
+    .summary-card {
+      background: rgba(34,197,94,0.05);
+      border: 1px solid rgba(34,197,94,0.15);
+      border-radius: 18px; padding: 28px 20px;
+      text-align: center; margin-bottom: 20px;
+    }
+    .summary-icon { font-size: 36px; margin-bottom: 8px; }
+    .summary-title { font-size: 20px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+    .summary-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; }
+    .summary-stat {
+      display: inline-block; padding: 6px 14px; margin: 3px;
+      background: rgba(255,255,255,0.04); border-radius: 8px;
+      font-size: 12px; color: #94a3b8;
+    }
+    .summary-stat strong { color: var(--text); }
+    .btn-restart {
+      margin-top: 16px; padding: 12px 28px;
+      background: linear-gradient(135deg, var(--success), #16a34a);
+      border: none; border-radius: 12px; color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="container" id="app"></div>
+
+<script>
+(function() {
+  // ============ Bale WebApp Integration ============
+  const WebApp = window.Bale?.WebApp;
+  if (WebApp) {
+    try {
+      WebApp.ready();
+      WebApp.expand();
+      // Apply Bale theme if available
+      if (WebApp.themeParams) {
+        const tp = WebApp.themeParams;
+        if (tp.bg_color) document.documentElement.style.setProperty('--bg', tp.bg_color);
+        if (tp.text_color) document.documentElement.style.setProperty('--text', tp.text_color);
+        if (tp.hint_color) document.documentElement.style.setProperty('--text-dim', tp.hint_color);
+        if (tp.button_color) document.documentElement.style.setProperty('--accent', tp.button_color);
+      }
+    } catch(e) { console.log('Bale WebApp init error:', e); }
+  }
+
+  // ============ State ============
+  const STORAGE_KEY = 'standup_members';
+  const EMOJIS = ['🟢','🔵','🟣','🟠','🔴','🟡','⚪','🩵','💚','🩷'];
+
+  let state = {
+    members: [],
+    order: [],
+    currentIndex: -1,
+    isShuffling: false,
+    shuffleDisplay: [],
+    timer: 0,
+    timerActive: false,
+    timeLimit: 120,
+    editingId: null,
+    editName: '',
+    newName: '',
+    finished: false,
+    totalTime: 0,
+  };
+
+  let timerInterval = null;
+
+  // ============ Storage ============
+  function loadMembers() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state.members = JSON.parse(raw);
+    } catch(e) {}
+  }
+  function saveMembers() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.members));
+    } catch(e) {}
+  }
+
+  // ============ Helpers ============
+  function shuffle(arr) {
+    const s = [...arr];
+    for (let i = s.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [s[i], s[j]] = [s[j], s[i]];
+    }
+    return s;
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  // ============ Actions ============
+  function addMember() {
+    const name = state.newName.trim();
+    if (!name) return;
+    state.members.push({
+      id: uid(),
+      name: name,
+      emoji: EMOJIS[state.members.length % EMOJIS.length]
+    });
+    state.newName = '';
+    saveMembers();
+    render();
+    // Focus input again
+    setTimeout(() => {
+      const inp = document.getElementById('nameInput');
+      if (inp) inp.focus();
+    }, 50);
+  }
+
+  function removeMember(id) {
+    state.members = state.members.filter(m => m.id !== id);
+    state.order = [];
+    state.currentIndex = -1;
+    stopTimer();
+    saveMembers();
+    render();
+  }
+
+  function startEdit(member) {
+    state.editingId = member.id;
+    state.editName = member.name;
+    render();
+    setTimeout(() => {
+      const inp = document.getElementById('editInput');
+      if (inp) { inp.focus(); inp.select(); }
+    }, 50);
+  }
+
+  function saveEdit() {
+    if (state.editName.trim()) {
+      state.members = state.members.map(m =>
+        m.id === state.editingId ? { ...m, name: state.editName.trim() } : m
+      );
+    }
+    state.editingId = null;
+    state.editName = '';
+    saveMembers();
+    render();
+  }
+
+  function startShuffle() {
+    if (state.members.length < 2) return;
+    state.isShuffling = true;
+    state.currentIndex = -1;
+    state.finished = false;
+    state.totalTime = 0;
+    stopTimer();
+    render();
+
+    let count = 0;
+    const maxCount = 18;
+    const interval = setInterval(() => {
+      state.shuffleDisplay = shuffle(state.members);
+      render();
+      count++;
+      if (count >= maxCount) {
+        clearInterval(interval);
+        state.order = shuffle(state.members);
+        state.shuffleDisplay = [];
+        state.isShuffling = false;
+        state.currentIndex = 0;
+        state.timer = 0;
+        startTimer();
+        render();
+      }
+    }, 90);
+  }
+
+  function nextPerson() {
+    state.totalTime += state.timer;
+    if (state.currentIndex < state.order.length - 1) {
+      state.currentIndex++;
+      state.timer = 0;
+      startTimer();
+    } else {
+      // Finished
+      state.finished = true;
+      state.currentIndex = -1;
+      stopTimer();
+    }
+    render();
+  }
+
+  function skipPerson() {
+    if (state.currentIndex >= 0 && state.currentIndex < state.order.length) {
+      const skipped = state.order[state.currentIndex];
+      state.order.splice(state.currentIndex, 1);
+      state.order.push(skipped);
+      state.timer = 0;
+      render();
+    }
+  }
+
+  function resetAll() {
+    state.members = [];
+    state.order = [];
+    state.currentIndex = -1;
+    state.finished = false;
+    stopTimer();
+    saveMembers();
+    render();
+  }
+
+  function newRound() {
+    state.order = [];
+    state.currentIndex = -1;
+    state.finished = false;
+    state.totalTime = 0;
+    stopTimer();
+    render();
+  }
+
+  function startTimer() {
+    stopTimer();
+    state.timerActive = true;
+    timerInterval = setInterval(() => {
+      state.timer++;
+      renderTimer();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    state.timerActive = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  function toggleTimer() {
+    if (state.timerActive) {
+      stopTimer();
+    } else {
+      startTimer();
+    }
+    render();
+  }
+
+  // ============ Render ============
+  function renderTimer() {
+    const timerEl = document.getElementById('timerDisplay');
+    const progressEl = document.getElementById('progressFill');
+    if (!timerEl || !progressEl) return;
+
+    const isOver = state.timer > state.timeLimit;
+    const isWarn = state.timer > state.timeLimit * 0.8;
+    const progress = Math.min((state.timer / state.timeLimit) * 100, 100);
+
+    timerEl.textContent = formatTime(state.timer);
+    timerEl.className = 'timer-display' + (isOver ? ' overtime' : isWarn ? ' warning' : '');
+    progressEl.style.width = progress + '%';
+    progressEl.className = 'progress-fill' + (isOver ? ' overtime' : isWarn ? ' warning' : '');
+
+    const glowEl = document.getElementById('activeGlow');
+    if (glowEl) glowEl.className = 'active-glow' + (isOver ? ' overtime' : '');
+  }
+
+  function render() {
+    const app = document.getElementById('app');
+    let html = '';
+
+    // Header
+    html += `
+      <div class="header">
+        <div class="badge">⚡ Team Standup</div>
+        <h1 class="title">نوبت‌دهی رندوم</h1>
+        <p class="subtitle">ترتیب صحبت تیم رو به‌صورت تصادفی مشخص کن</p>
+      </div>
+    `;
+
+    // Summary (finished)
+    if (state.finished) {
+      const avgTime = state.order.length > 0 ? Math.round(state.totalTime / state.order.length) : 0;
+      html += `
+        <div class="summary-card">
+          <div class="summary-icon">✅</div>
+          <div class="summary-title">استندآپ تموم شد!</div>
+          <div class="summary-subtitle">${state.order.length} نفر صحبت کردن</div>
+          <div>
+            <span class="summary-stat">⏱ کل: <strong>${formatTime(state.totalTime)}</strong></span>
+            <span class="summary-stat">📊 میانگین: <strong>${formatTime(avgTime)}</strong></span>
+          </div>
+          <br>
+          <button class="btn-restart" onclick="window._app.newRound()">🔄 دور جدید</button>
+        </div>
+      `;
+      app.innerHTML = html;
+      return;
+    }
+
+    // Active standup
+    if (state.currentIndex >= 0 && state.order.length > 0) {
+      const current = state.order[state.currentIndex];
+      const isOver = state.timer > state.timeLimit;
+      const isWarn = state.timer > state.timeLimit * 0.8;
+      const progress = Math.min((state.timer / state.timeLimit) * 100, 100);
+
+      html += `
+        <div class="active-card">
+          <div id="activeGlow" class="active-glow${isOver ? ' overtime' : ''}"></div>
+          <div class="active-emoji">${current.emoji}</div>
+          <div class="active-name">${esc(current.name)}</div>
+          <p class="active-count">نفر ${state.currentIndex + 1} از ${state.order.length}</p>
+          <div id="timerDisplay" class="timer-display${isOver ? ' overtime' : isWarn ? ' warning' : ''}">${formatTime(state.timer)}</div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill${isOver ? ' overtime' : isWarn ? ' warning' : ''}" style="width:${progress}%"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-action btn-next" onclick="window._app.nextPerson()">
+              ${state.currentIndex < state.order.length - 1 ? 'نفر بعدی ←' : 'اتمام ✓'}
+            </button>
+            ${state.currentIndex < state.order.length - 1 ? `
+              <button class="btn-action btn-skip" onclick="window._app.skipPerson()">رد شو</button>
+            ` : ''}
+            <button class="btn-action btn-pause" onclick="window._app.toggleTimer()">
+              ${state.timerActive ? '⏸' : '▶'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Queue
+      html += `<div class="section"><div class="section-label">صف صحبت</div><div class="queue-list">`;
+      state.order.forEach((member, i) => {
+        const isActive = i === state.currentIndex;
+        const isDone = i < state.currentIndex;
+        html += `
+          <div class="queue-item${isActive ? ' active' : ''}${isDone ? ' done' : ''}">
+            <div class="queue-num${isActive ? ' active' : ''}">
+              ${isDone ? '<span class="done-check">✓</span>' : (i + 1)}
+            </div>
+            <span style="font-size:14px">${member.emoji}</span>
+            <span class="queue-name${isActive ? ' active' : ''}">${esc(member.name)}</span>
+            ${isActive ? '<span class="queue-badge">در حال صحبت</span>' : ''}
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+
+    } else {
+      // Setup mode
+
+      // Add member
+      html += `
+        <div class="section">
+          <div class="section-label">اعضای تیم</div>
+          <div class="input-row">
+            <input id="nameInput" type="text" placeholder="اسم عضو تیم..."
+              value="${esc(state.newName)}"
+              oninput="window._app.state.newName = this.value"
+              onkeydown="if(event.key==='Enter') window._app.addMember()"
+            >
+            <button class="btn-add" onclick="window._app.addMember()">+ افزودن</button>
+          </div>
+        </div>
+      `;
+
+      // Members list
+      if (state.members.length > 0) {
+        html += `<div class="section"><div class="member-list">`;
+        state.members.forEach(member => {
+          if (state.editingId === member.id) {
+            html += `
+              <div class="member-item">
+                <span class="member-emoji">${member.emoji}</span>
+                <input id="editInput" class="edit-input" type="text"
+                  value="${esc(state.editName)}"
+                  oninput="window._app.state.editName = this.value"
+                  onkeydown="if(event.key==='Enter') window._app.saveEdit()"
+                  onblur="setTimeout(() => window._app.saveEdit(), 150)"
+                >
+              </div>
+            `;
+          } else {
+            html += `
+              <div class="member-item">
+                <span class="member-emoji">${member.emoji}</span>
+                <span class="member-name">${esc(member.name)}</span>
+                <button class="member-btn edit" onclick="window._app.startEdit({id:'${member.id}',name:'${esc(member.name)}',emoji:'${member.emoji}'})">✎</button>
+                <button class="member-btn delete" onclick="window._app.removeMember('${member.id}')">✕</button>
+              </div>
+            `;
+          }
+        });
+        html += `</div></div>`;
+      } else {
+        html += `
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p class="empty-text">اعضای تیم رو اضافه کن تا شروع کنیم</p>
+          </div>
+        `;
+      }
+
+      // Time setting
+      html += `
+        <div class="section">
+          <div class="section-label">تنظیمات</div>
+          <div class="settings-row">
+            <span class="settings-label">⏱ زمان هر نفر</span>
+            <select class="settings-select" onchange="window._app.state.timeLimit = Number(this.value)">
+              <option value="60" ${state.timeLimit === 60 ? 'selected' : ''}>۱ دقیقه</option>
+              <option value="90" ${state.timeLimit === 90 ? 'selected' : ''}>۱:۳۰ دقیقه</option>
+              <option value="120" ${state.timeLimit === 120 ? 'selected' : ''}>۲ دقیقه</option>
+              <option value="180" ${state.timeLimit === 180 ? 'selected' : ''}>۳ دقیقه</option>
+              <option value="300" ${state.timeLimit === 300 ? 'selected' : ''}>۵ دقیقه</option>
+            </select>
+          </div>
+        </div>
+      `;
+
+      // Shuffle button
+      const disabled = state.members.length < 2;
+      html += `
+        <button class="btn-shuffle${disabled ? ' disabled' : ''}" onclick="window._app.startShuffle()" ${disabled ? 'disabled' : ''}>
+          ${disabled ? 'حداقل ۲ نفر اضافه کن' : '<span class="shimmer"></span>🎲  شروع استندآپ'}
+        </button>
+      `;
+
+      if (state.members.length > 0) {
+        html += `<button class="btn-reset" onclick="window._app.resetAll()">🗑 پاک کردن همه</button>`;
+      }
+    }
+
+    // Shuffle overlay
+    if (state.isShuffling) {
+      html += `
+        <div class="shuffle-overlay">
+          <div class="shuffle-card">
+            <div class="shuffle-label">🎲 در حال قرعه‌کشی...</div>
+            <div class="shuffle-names">
+              ${state.shuffleDisplay.map(m => `<div class="shuffle-name">${m.emoji} ${esc(m.name)}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    app.innerHTML = html;
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ============ Init ============
+  loadMembers();
+
+  // Expose to global for onclick handlers
+  window._app = {
+    state,
+    addMember, removeMember, startEdit, saveEdit,
+    startShuffle, nextPerson, skipPerson, toggleTimer,
+    resetAll, newRound,
+  };
+
+  render();
+})();
+</script>
+
+</body>
+</html>
