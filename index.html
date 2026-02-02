@@ -9,7 +9,6 @@
     :root {
       --bg: #0f1117;
       --bg-card: rgba(255,255,255,0.04);
-      --bg-card-hover: rgba(255,255,255,0.07);
       --border: rgba(255,255,255,0.07);
       --border-active: rgba(56,189,248,0.25);
       --text: #e2e8f0;
@@ -35,7 +34,6 @@
       padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 
-    /* Background effects */
     .bg-grid {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background-image:
@@ -54,8 +52,7 @@
       padding: 24px 16px 40px; position: relative; z-index: 1;
     }
 
-    /* Header */
-    .header { text-align: center; margin-bottom: 32px; }
+    .header { text-align: center; margin-bottom: 28px; }
     .badge {
       display: inline-block; padding: 5px 14px;
       background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2);
@@ -68,7 +65,6 @@
     }
     .subtitle { font-size: 13px; color: var(--text-dim); font-weight: 400; }
 
-    /* Section */
     .section { margin-bottom: 24px; }
     .section-label {
       font-size: 10px; font-weight: 700; color: var(--text-muted);
@@ -76,63 +72,43 @@
       margin-bottom: 10px; padding: 0 2px;
     }
 
-    /* Input Row */
-    .input-row { display: flex; gap: 8px; align-items: center; }
-    .input-row input {
-      flex: 1; padding: 13px 16px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text); font-size: 14px;
-      outline: none; direction: rtl; transition: border 0.2s;
-      font-family: inherit;
-    }
-    .input-row input:focus { border-color: var(--border-active); }
-    .input-row input::placeholder { color: var(--text-muted); }
-    .btn-add {
-      padding: 13px 20px;
-      background: linear-gradient(135deg, var(--accent), #2563eb);
-      border: none; border-radius: 12px; color: #fff;
-      font-size: 13px; font-weight: 700; cursor: pointer;
-      white-space: nowrap; font-family: inherit;
-      transition: transform 0.15s, opacity 0.15s;
-    }
-    .btn-add:active { transform: scale(0.96); opacity: 0.9; }
-
-    /* Member List */
-    .member-list { display: flex; flex-direction: column; gap: 4px; }
+    /* Member List with Toggle */
+    .member-list { display: flex; flex-direction: column; gap: 6px; }
     .member-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 14px; background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 10px;
-      transition: background 0.2s;
-      animation: fadeSlideIn 0.25s ease-out;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 12px;
+      transition: all 0.25s; cursor: pointer;
     }
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+    .member-item:active { transform: scale(0.98); }
+    .member-item.disabled {
+      opacity: 0.4;
+      background: transparent;
     }
-    .member-emoji { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
-    .member-name { flex: 1; font-size: 14px; font-weight: 500; color: #cbd5e1; }
-    .member-btn {
-      background: none; border: none; cursor: pointer;
-      padding: 4px 6px; border-radius: 6px; font-size: 13px;
-      transition: opacity 0.15s; opacity: 0.5;
+    .member-emoji { font-size: 20px; transition: filter 0.25s; }
+    .member-item.disabled .member-emoji { filter: grayscale(1); }
+    .member-name { flex: 1; font-size: 14px; font-weight: 600; color: #cbd5e1; }
+    .member-item.disabled .member-name { text-decoration: line-through; color: var(--text-muted); }
+    
+    .toggle {
+      width: 44px; height: 26px; border-radius: 13px;
+      background: rgba(255,255,255,0.1); position: relative;
+      transition: background 0.25s; flex-shrink: 0;
     }
-    .member-btn:active { opacity: 1; }
-    .member-btn.edit { color: var(--text-dim); }
-    .member-btn.delete { color: var(--danger); }
-    .edit-input {
-      flex: 1; padding: 5px 10px;
-      background: rgba(255,255,255,0.08); border: 1px solid var(--border-active);
-      border-radius: 8px; color: var(--text); font-size: 13px;
-      font-family: inherit; direction: rtl; outline: none;
+    .toggle.active { background: var(--success); }
+    .toggle::after {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; top: 3px; right: 3px;
+      transition: transform 0.25s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
+    .toggle.active::after { transform: translateX(-18px); }
 
-    /* Empty State */
-    .empty-state {
-      text-align: center; padding: 36px 20px; color: var(--text-muted);
+    .active-count-badge {
+      text-align: center; padding: 8px;
+      font-size: 12px; color: var(--text-dim);
     }
-    .empty-icon { font-size: 36px; margin-bottom: 10px; }
-    .empty-text { font-size: 13px; }
+    .active-count-badge strong { color: var(--accent); }
 
     /* Settings */
     .settings-row {
@@ -147,7 +123,7 @@
       color: var(--text); font-size: 12px; font-family: inherit;
       cursor: pointer; direction: ltr;
     }
- 
+
     /* Shuffle Button */
     .btn-shuffle {
       width: 100%; padding: 16px;
@@ -168,9 +144,27 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
       animation: shimmer 2.5s infinite;
     }
-    @keyframes shimmer {
-      0% { left: -100%; }
-      100% { left: 100%; }
+    @keyframes shimmer { 0% { left: -100%; } 100% { left: 100%; } }
+
+    /* Shuffle Overlay - Original Style */
+    .shuffle-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .shuffle-card { text-align: center; padding: 40px; }
+    .shuffle-label {
+      font-size: 14px; color: var(--accent); font-weight: 600; margin-bottom: 20px;
+    }
+    .shuffle-names { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .shuffle-name {
+      font-size: 20px; font-weight: 700; color: #f1f5f9; padding: 6px 16px;
+      display: flex; align-items: center; gap: 10px;
+      animation: shufflePop 0.1s ease-out;
+    }
+    @keyframes shufflePop {
+      0% { transform: scale(0.8) translateY(-10px); opacity: 0.5; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
     }
 
     /* Active Standup Card */
@@ -190,7 +184,7 @@
     .active-glow.overtime {
       background: linear-gradient(90deg, transparent, var(--danger), transparent);
     }
-    .active-emoji { font-size: 32px; margin-bottom: 6px; }
+    .active-emoji { font-size: 36px; margin-bottom: 6px; }
     .active-name {
       font-size: 26px; font-weight: 800; color: #f1f5f9; margin-bottom: 2px;
     }
@@ -214,7 +208,6 @@
     .progress-fill.warning { background: var(--warning); }
     .progress-fill.overtime { background: var(--danger); }
 
-    /* Button Row */
     .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .btn-action {
       padding: 11px 22px; border-radius: 11px; border: none;
@@ -222,9 +215,7 @@
       transition: transform 0.15s, opacity 0.15s; font-family: inherit;
     }
     .btn-action:active { transform: scale(0.96); opacity: 0.9; }
-    .btn-next {
-      background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff;
-    }
+    .btn-next { background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff; }
     .btn-skip {
       background: rgba(255,255,255,0.06); color: #94a3b8;
       border: 1px solid var(--border);
@@ -263,28 +254,7 @@
     }
     .done-check { font-size: 12px; color: var(--success); }
 
-    /* Reset */
-    .btn-reset {
-      display: block; margin: 10px auto 0; background: none; border: none;
-      color: var(--text-dim); font-size: 11px; cursor: pointer;
-      padding: 8px 14px; border-radius: 8px; font-family: inherit;
-    }
-    .btn-reset:active { color: var(--danger); }
-
-    /* Shuffle Overlay */
-    .shuffle-overlay {
-      position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .shuffle-card { text-align: center; padding: 40px; }
-    .shuffle-label {
-      font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 14px;
-    }
-    .shuffle-names { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-    .shuffle-name { font-size: 18px; font-weight: 700; color: #f1f5f9; padding: 3px 12px; }
-
-    /* Summary Card */
+    /* Summary */
     .summary-card {
       background: rgba(34,197,94,0.05);
       border: 1px solid rgba(34,197,94,0.15);
@@ -313,18 +283,15 @@
 
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
-
 <div class="container" id="app"></div>
 
 <script>
 (function() {
-  // ============ Bale WebApp Integration ============
   const WebApp = window.Bale?.WebApp;
   if (WebApp) {
     try {
       WebApp.ready();
       WebApp.expand();
-      // Apply Bale theme if available
       if (WebApp.themeParams) {
         const tp = WebApp.themeParams;
         if (tp.bg_color) document.documentElement.style.setProperty('--bg', tp.bg_color);
@@ -332,15 +299,32 @@
         if (tp.hint_color) document.documentElement.style.setProperty('--text-dim', tp.hint_color);
         if (tp.button_color) document.documentElement.style.setProperty('--accent', tp.button_color);
       }
-    } catch(e) { console.log('Bale WebApp init error:', e); }
+    } catch(e) {}
   }
 
-  // ============ State ============
-  const STORAGE_KEY = 'standup_members';
-  const EMOJIS = ['🟢','🔵','🟣','🟠','🔴','🟡','⚪','🩵','💚','🩷'];
+  // Fixed team members
+  const TEAM = [
+    { id: '1', name: 'ملیکا میاهی', emoji: '💜' },
+    { id: '2', name: 'عاطفه طاهری', emoji: '💙' },
+    { id: '3', name: 'آراد حصادی', emoji: '💚' },
+    { id: '4', name: 'فائزه گلرخان', emoji: '🧡' },
+    { id: '5', name: 'عباس پورامینی', emoji: '❤️' },
+    { id: '6', name: 'نوید موسوی‌نژاد', emoji: '💛' },
+  ];
+
+  // Load disabled members from storage
+  function loadDisabled() {
+    try {
+      const raw = localStorage.getItem('standup_disabled');
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+  function saveDisabled(arr) {
+    try { localStorage.setItem('standup_disabled', JSON.stringify(arr)); } catch(e) {}
+  }
 
   let state = {
-    members: [],
+    disabledIds: loadDisabled(),
     order: [],
     currentIndex: -1,
     isShuffling: false,
@@ -348,29 +332,26 @@
     timer: 0,
     timerActive: false,
     timeLimit: 120,
-    editingId: null,
-    editName: '',
-    newName: '',
-    finished: false,
     totalTime: 0,
+    finished: false,
   };
 
   let timerInterval = null;
 
-  // ============ Storage ============
-  function loadMembers() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) state.members = JSON.parse(raw);
-    } catch(e) {}
-  }
-  function saveMembers() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.members));
-    } catch(e) {}
+  function getActiveMembers() {
+    return TEAM.filter(m => !state.disabledIds.includes(m.id));
   }
 
-  // ============ Helpers ============
+  function toggleMember(id) {
+    if (state.disabledIds.includes(id)) {
+      state.disabledIds = state.disabledIds.filter(x => x !== id);
+    } else {
+      state.disabledIds.push(id);
+    }
+    saveDisabled(state.disabledIds);
+    render();
+  }
+
   function shuffle(arr) {
     const s = [...arr];
     for (let i = s.length - 1; i > 0; i--) {
@@ -386,62 +367,10 @@
     return m + ':' + String(sec).padStart(2, '0');
   }
 
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  }
-
-  // ============ Actions ============
-  function addMember() {
-    const name = state.newName.trim();
-    if (!name) return;
-    state.members.push({
-      id: uid(),
-      name: name,
-      emoji: EMOJIS[state.members.length % EMOJIS.length]
-    });
-    state.newName = '';
-    saveMembers();
-    render();
-    // Focus input again
-    setTimeout(() => {
-      const inp = document.getElementById('nameInput');
-      if (inp) inp.focus();
-    }, 50);
-  }
-
-  function removeMember(id) {
-    state.members = state.members.filter(m => m.id !== id);
-    state.order = [];
-    state.currentIndex = -1;
-    stopTimer();
-    saveMembers();
-    render();
-  }
-
-  function startEdit(member) {
-    state.editingId = member.id;
-    state.editName = member.name;
-    render();
-    setTimeout(() => {
-      const inp = document.getElementById('editInput');
-      if (inp) { inp.focus(); inp.select(); }
-    }, 50);
-  }
-
-  function saveEdit() {
-    if (state.editName.trim()) {
-      state.members = state.members.map(m =>
-        m.id === state.editingId ? { ...m, name: state.editName.trim() } : m
-      );
-    }
-    state.editingId = null;
-    state.editName = '';
-    saveMembers();
-    render();
-  }
-
   function startShuffle() {
-    if (state.members.length < 2) return;
+    const active = getActiveMembers();
+    if (active.length < 2) return;
+
     state.isShuffling = true;
     state.currentIndex = -1;
     state.finished = false;
@@ -452,12 +381,12 @@
     let count = 0;
     const maxCount = 18;
     const interval = setInterval(() => {
-      state.shuffleDisplay = shuffle(state.members);
+      state.shuffleDisplay = shuffle(active);
       render();
       count++;
       if (count >= maxCount) {
         clearInterval(interval);
-        state.order = shuffle(state.members);
+        state.order = shuffle(active);
         state.shuffleDisplay = [];
         state.isShuffling = false;
         state.currentIndex = 0;
@@ -466,50 +395,6 @@
         render();
       }
     }, 90);
-  }
-
-  function nextPerson() {
-    state.totalTime += state.timer;
-    if (state.currentIndex < state.order.length - 1) {
-      state.currentIndex++;
-      state.timer = 0;
-      startTimer();
-    } else {
-      // Finished
-      state.finished = true;
-      state.currentIndex = -1;
-      stopTimer();
-    }
-    render();
-  }
-
-  function skipPerson() {
-    if (state.currentIndex >= 0 && state.currentIndex < state.order.length) {
-      const skipped = state.order[state.currentIndex];
-      state.order.splice(state.currentIndex, 1);
-      state.order.push(skipped);
-      state.timer = 0;
-      render();
-    }
-  }
-
-  function resetAll() {
-    state.members = [];
-    state.order = [];
-    state.currentIndex = -1;
-    state.finished = false;
-    stopTimer();
-    saveMembers();
-    render();
-  }
-
-  function newRound() {
-    state.order = [];
-    state.currentIndex = -1;
-    state.finished = false;
-    state.totalTime = 0;
-    stopTimer();
-    render();
   }
 
   function startTimer() {
@@ -528,19 +413,49 @@
   }
 
   function toggleTimer() {
-    if (state.timerActive) {
-      stopTimer();
-    } else {
+    if (state.timerActive) stopTimer();
+    else startTimer();
+    render();
+  }
+
+  function nextPerson() {
+    state.totalTime += state.timer;
+    if (state.currentIndex < state.order.length - 1) {
+      state.currentIndex++;
+      state.timer = 0;
       startTimer();
+    } else {
+      state.finished = true;
+      state.currentIndex = -1;
+      stopTimer();
     }
     render();
   }
 
-  // ============ Render ============
+  function skipPerson() {
+    if (state.currentIndex >= 0 && state.currentIndex < state.order.length) {
+      const skipped = state.order[state.currentIndex];
+      state.order.splice(state.currentIndex, 1);
+      state.order.push(skipped);
+      state.timer = 0;
+      render();
+    }
+  }
+
+  function newRound() {
+    state.order = [];
+    state.currentIndex = -1;
+    state.finished = false;
+    state.totalTime = 0;
+    stopTimer();
+    render();
+  }
+
   function renderTimer() {
     const timerEl = document.getElementById('timerDisplay');
     const progressEl = document.getElementById('progressFill');
-    if (!timerEl || !progressEl) return;
+    const glowEl = document.getElementById('activeGlow');
+    if (!timerEl) return;
 
     const isOver = state.timer > state.timeLimit;
     const isWarn = state.timer > state.timeLimit * 0.8;
@@ -548,15 +463,16 @@
 
     timerEl.textContent = formatTime(state.timer);
     timerEl.className = 'timer-display' + (isOver ? ' overtime' : isWarn ? ' warning' : '');
-    progressEl.style.width = progress + '%';
-    progressEl.className = 'progress-fill' + (isOver ? ' overtime' : isWarn ? ' warning' : '');
-
-    const glowEl = document.getElementById('activeGlow');
+    if (progressEl) {
+      progressEl.style.width = progress + '%';
+      progressEl.className = 'progress-fill' + (isOver ? ' overtime' : isWarn ? ' warning' : '');
+    }
     if (glowEl) glowEl.className = 'active-glow' + (isOver ? ' overtime' : '');
   }
 
   function render() {
     const app = document.getElementById('app');
+    const active = getActiveMembers();
     let html = '';
 
     // Header
@@ -564,23 +480,22 @@
       <div class="header">
         <div class="badge">⚡ Team Standup</div>
         <h1 class="title">نوبت‌دهی رندوم</h1>
-        <p class="subtitle">ترتیب صحبت تیم رو به‌صورت تصادفی مشخص کن</p>
+        <p class="subtitle">تیم پروداکت بله</p>
       </div>
     `;
 
-    // Summary (finished)
+    // Finished
     if (state.finished) {
       const avgTime = state.order.length > 0 ? Math.round(state.totalTime / state.order.length) : 0;
       html += `
         <div class="summary-card">
-          <div class="summary-icon">✅</div>
+          <div class="summary-icon">🎉</div>
           <div class="summary-title">استندآپ تموم شد!</div>
           <div class="summary-subtitle">${state.order.length} نفر صحبت کردن</div>
           <div>
             <span class="summary-stat">⏱ کل: <strong>${formatTime(state.totalTime)}</strong></span>
             <span class="summary-stat">📊 میانگین: <strong>${formatTime(avgTime)}</strong></span>
           </div>
-          <br>
           <button class="btn-restart" onclick="window._app.newRound()">🔄 دور جدید</button>
         </div>
       `;
@@ -599,7 +514,7 @@
         <div class="active-card">
           <div id="activeGlow" class="active-glow${isOver ? ' overtime' : ''}"></div>
           <div class="active-emoji">${current.emoji}</div>
-          <div class="active-name">${esc(current.name)}</div>
+          <div class="active-name">${current.name}</div>
           <p class="active-count">نفر ${state.currentIndex + 1} از ${state.order.length}</p>
           <div id="timerDisplay" class="timer-display${isOver ? ' overtime' : isWarn ? ' warning' : ''}">${formatTime(state.timer)}</div>
           <div class="progress-bar">
@@ -630,7 +545,7 @@
               ${isDone ? '<span class="done-check">✓</span>' : (i + 1)}
             </div>
             <span style="font-size:14px">${member.emoji}</span>
-            <span class="queue-name${isActive ? ' active' : ''}">${esc(member.name)}</span>
+            <span class="queue-name${isActive ? ' active' : ''}">${member.name}</span>
             ${isActive ? '<span class="queue-badge">در حال صحبت</span>' : ''}
           </div>
         `;
@@ -638,61 +553,22 @@
       html += `</div></div>`;
 
     } else {
-      // Setup mode
-
-      // Add member
-      html += `
-        <div class="section">
-          <div class="section-label">اعضای تیم</div>
-          <div class="input-row">
-            <input id="nameInput" type="text" placeholder="اسم عضو تیم..."
-              value="${esc(state.newName)}"
-              oninput="window._app.state.newName = this.value"
-              onkeydown="if(event.key==='Enter') window._app.addMember()"
-            >
-            <button class="btn-add" onclick="window._app.addMember()">+ افزودن</button>
-          </div>
-        </div>
-      `;
-
-      // Members list
-      if (state.members.length > 0) {
-        html += `<div class="section"><div class="member-list">`;
-        state.members.forEach(member => {
-          if (state.editingId === member.id) {
-            html += `
-              <div class="member-item">
-                <span class="member-emoji">${member.emoji}</span>
-                <input id="editInput" class="edit-input" type="text"
-                  value="${esc(state.editName)}"
-                  oninput="window._app.state.editName = this.value"
-                  onkeydown="if(event.key==='Enter') window._app.saveEdit()"
-                  onblur="setTimeout(() => window._app.saveEdit(), 150)"
-                >
-              </div>
-            `;
-          } else {
-            html += `
-              <div class="member-item">
-                <span class="member-emoji">${member.emoji}</span>
-                <span class="member-name">${esc(member.name)}</span>
-                <button class="member-btn edit" onclick="window._app.startEdit({id:'${member.id}',name:'${esc(member.name)}',emoji:'${member.emoji}'})">✎</button>
-                <button class="member-btn delete" onclick="window._app.removeMember('${member.id}')">✕</button>
-              </div>
-            `;
-          }
-        });
-        html += `</div></div>`;
-      } else {
+      // Setup mode - member list with toggles
+      html += `<div class="section"><div class="section-label">اعضای تیم (برای غیرفعال کردن تپ کن)</div><div class="member-list">`;
+      TEAM.forEach(m => {
+        const isDisabled = state.disabledIds.includes(m.id);
         html += `
-          <div class="empty-state">
-            <div class="empty-icon">👥</div>
-            <p class="empty-text">اعضای تیم رو اضافه کن تا شروع کنیم</p>
+          <div class="member-item ${isDisabled ? 'disabled' : ''}" onclick="window._app.toggleMember('${m.id}')">
+            <span class="member-emoji">${m.emoji}</span>
+            <span class="member-name">${m.name}</span>
+            <div class="toggle ${isDisabled ? '' : 'active'}"></div>
           </div>
         `;
-      }
+      });
+      html += `</div>`;
+      html += `<div class="active-count-badge"><strong>${active.length}</strong> نفر فعال از ${TEAM.length} نفر</div></div>`;
 
-      // Time setting
+      // Settings
       html += `
         <div class="section">
           <div class="section-label">تنظیمات</div>
@@ -710,16 +586,12 @@
       `;
 
       // Shuffle button
-      const disabled = state.members.length < 2;
+      const canStart = active.length >= 2;
       html += `
-        <button class="btn-shuffle${disabled ? ' disabled' : ''}" onclick="window._app.startShuffle()" ${disabled ? 'disabled' : ''}>
-          ${disabled ? 'حداقل ۲ نفر اضافه کن' : '<span class="shimmer"></span>🎲  شروع استندآپ'}
+        <button class="btn-shuffle ${canStart ? '' : 'disabled'}" onclick="window._app.startShuffle()" ${canStart ? '' : 'disabled'}>
+          ${canStart ? '<span class="shimmer"></span>🎲  شروع استندآپ' : 'حداقل ۲ نفر فعال باشن'}
         </button>
       `;
-
-      if (state.members.length > 0) {
-        html += `<button class="btn-reset" onclick="window._app.resetAll()">🗑 پاک کردن همه</button>`;
-      }
     }
 
     // Shuffle overlay
@@ -729,7 +601,7 @@
           <div class="shuffle-card">
             <div class="shuffle-label">🎲 در حال قرعه‌کشی...</div>
             <div class="shuffle-names">
-              ${state.shuffleDisplay.map(m => `<div class="shuffle-name">${m.emoji} ${esc(m.name)}</div>`).join('')}
+              ${state.shuffleDisplay.map(m => `<div class="shuffle-name">${m.emoji} ${m.name}</div>`).join('')}
             </div>
           </div>
         </div>
@@ -739,20 +611,9 @@
     app.innerHTML = html;
   }
 
-  function esc(str) {
-    if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-
-  // ============ Init ============
-  loadMembers();
-
-  // Expose to global for onclick handlers
   window._app = {
     state,
-    addMember, removeMember, startEdit, saveEdit,
-    startShuffle, nextPerson, skipPerson, toggleTimer,
-    resetAll, newRound,
+    toggleMember, startShuffle, nextPerson, skipPerson, toggleTimer, newRound,
   };
 
   render();
