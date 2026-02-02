@@ -66,6 +66,12 @@
     }
 
     /* Setup: members */
+    .setup-hint {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
     .member-form {
       display: flex;
       gap: 0.5rem;
@@ -135,14 +141,19 @@
     .member-item {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 0.75rem;
       padding: 0.85rem 1rem;
       background: var(--surface);
       border-radius: 12px;
       margin-bottom: 0.5rem;
       border: 1px solid var(--border);
+      transition: opacity 0.2s;
+    }
+    .member-item.disabled {
+      opacity: 0.5;
     }
     .member-item .name {
+      flex: 1;
       font-weight: 500;
     }
     .member-item .actions {
@@ -159,6 +170,39 @@
     }
     .member-item .actions button:hover {
       color: var(--accent);
+    }
+    .toggle-wrap {
+      flex-shrink: 0;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-switch.on {
+      background: var(--accent);
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    [dir="rtl"] .toggle-switch.on::after {
+      transform: translateX(20px);
+    }
+    [dir="ltr"] .toggle-switch.on::after,
+    .toggle-switch.on::after {
+      transform: translateX(-20px);
     }
 
     .empty-state {
@@ -395,12 +439,13 @@
 
     <!-- Setup screen -->
     <section id="screen-setup" class="screen active">
+      <p class="setup-hint">اعضای دیلی را خاموش/روشن کنید؛ ترتیب نمایش با ملیکا میاهی در آخر است.</p>
       <div class="member-form">
-        <input type="text" id="member-input" placeholder="نام عضو تیم" maxlength="50" enterkeyhint="done">
+        <input type="text" id="member-input" placeholder="نام عضو جدید (اختیاری)" maxlength="50" enterkeyhint="done">
         <button type="button" class="btn btn-primary" id="btn-add">افزودن</button>
       </div>
       <ul class="member-list" id="member-list"></ul>
-      <div id="empty-members" class="empty-state">هنوز عضوی اضافه نشده. نام را وارد کنید و افزودن بزنید.</div>
+      <div id="empty-members" class="empty-state">هنوز عضوی نیست. از لیست پیش‌فرض استفاده می‌شود یا با افزودن، عضو اضافه کنید.</div>
       <div class="timer-config">
         <label>محدودیت زمان هر نفر (دقیقه)</label>
         <input type="range" id="timer-limit" min="1" max="5" value="2" step="1">
@@ -462,6 +507,8 @@
       const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
       const STORAGE_KEY = 'standup_team_members';
       const STORAGE_LIMIT = 'standup_timer_limit';
+      const LAST_IN_ORDER = 'ملیکا میاهی';
+      const DEFAULT_DAILY_MEMBERS = ['نفر ۱', 'نفر ۲', 'نفر ۳', 'نفر ۴', 'نفر ۵', LAST_IN_ORDER];
 
       function toPersianNum(n) {
         return String(n).replace(/\d/g, d => PERSIAN_DIGITS[+d]);
@@ -510,11 +557,35 @@
       function loadMembers() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) members = JSON.parse(raw);
-          else members = [];
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            members = Array.isArray(parsed) ? parsed : [];
+          } else {
+            members = DEFAULT_DAILY_MEMBERS.map((name, i) => ({
+              id: 'def-' + i,
+              name: name,
+              enabled: true
+            }));
+          }
         } catch (_) {
-          members = [];
+          members = DEFAULT_DAILY_MEMBERS.map((name, i) => ({
+            id: 'def-' + i,
+            name: name,
+            enabled: true
+          }));
         }
+      }
+
+      function getActiveMembers() {
+        return members.filter(m => m.enabled);
+      }
+
+      function getOrderedNames() {
+        const active = getActiveMembers().map(m => m.name);
+        const hasLast = active.some(n => n.trim() === LAST_IN_ORDER);
+        if (!hasLast) return active;
+        const rest = active.filter(n => n.trim() !== LAST_IN_ORDER);
+        return rest.concat([LAST_IN_ORDER]);
       }
 
       function saveMembers() {
@@ -537,12 +608,29 @@
         memberList.innerHTML = '';
         members.forEach((m, i) => {
           const li = document.createElement('li');
-          li.className = 'member-item';
-          li.innerHTML = '<span class="name">' + escapeHtml(m.name) + '</span><div class="actions"><button type="button" data-edit="' + i + '" aria-label="ویرایش">✏️</button><button type="button" data-remove="' + i + '" aria-label="حذف">🗑️</button></div>';
+          li.className = 'member-item' + (m.enabled ? '' : ' disabled');
+          const toggle = document.createElement('div');
+          toggle.className = 'toggle-wrap';
+          const switchEl = document.createElement('button');
+          switchEl.type = 'button';
+          switchEl.className = 'toggle-switch' + (m.enabled ? ' on' : '');
+          switchEl.setAttribute('aria-label', m.enabled ? 'حضور دارد' : 'نیست');
+          switchEl.addEventListener('click', () => toggleMember(i));
+          toggle.appendChild(switchEl);
+          li.appendChild(toggle);
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'name';
+          nameSpan.textContent = m.name;
+          li.appendChild(nameSpan);
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+          actions.innerHTML = '<button type="button" data-edit="' + i + '" aria-label="ویرایش">✏️</button><button type="button" data-remove="' + i + '" aria-label="حذف">🗑️</button>';
+          li.appendChild(actions);
           memberList.appendChild(li);
         });
+        const activeCount = getActiveMembers().length;
         emptyMembers.style.display = members.length ? 'none' : 'block';
-        document.getElementById('btn-start').disabled = members.length < 2;
+        document.getElementById('btn-start').disabled = activeCount < 2;
       }
 
       function escapeHtml(s) {
@@ -575,13 +663,22 @@
         if (el) el.classList.add('active');
       }
 
+      function toggleMember(index) {
+        members[index].enabled = !members[index].enabled;
+        saveMembers();
+        renderMembers();
+        buildQueueFromOrder();
+        renderShuffleZone();
+      }
+
       function addMember() {
         const name = memberInput.value.trim();
         if (!name) return;
-        members.push({ id: Date.now().toString(), name });
+        members.push({ id: Date.now().toString(), name, enabled: true });
         memberInput.value = '';
         saveMembers();
         renderMembers();
+        buildQueueFromOrder();
         renderShuffleZone();
       }
 
@@ -589,6 +686,7 @@
         members.splice(index, 1);
         saveMembers();
         renderMembers();
+        buildQueueFromOrder();
         renderShuffleZone();
       }
 
@@ -599,11 +697,10 @@
           members[index].name = newName.trim();
           saveMembers();
           renderMembers();
+          buildQueueFromOrder();
           renderShuffleZone();
         }
       }
-
-      const LAST_IN_ORDER = 'ملیکا میاهی';
 
       function ensureLastInQueue(arr) {
         const name = arr.find(n => n.trim() === LAST_IN_ORDER);
@@ -612,8 +709,12 @@
         return rest.concat([name]);
       }
 
+      function buildQueueFromOrder() {
+        queue = getOrderedNames();
+      }
+
       function shuffleQueue() {
-        if (queue.length === 0) queue = members.map(m => m.name);
+        if (queue.length === 0) buildQueueFromOrder();
         for (let i = queue.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [queue[i], queue[j]] = [queue[j], queue[i]];
@@ -624,7 +725,8 @@
       }
 
       function startStandup() {
-        if (queue.length === 0) queue = ensureLastInQueue(members.map(m => m.name));
+        if (queue.length === 0) buildQueueFromOrder();
+        if (queue.length < 2) return;
         spokeTimes = {};
         showScreen('standup');
         runCurrentSpeaker();
@@ -731,3 +833,32 @@
       document.getElementById('btn-shuffle').addEventListener('click', shuffleQueue);
       document.getElementById('btn-start').addEventListener('click', startStandup);
       document.getElementById('btn-pause').addEventListener('click', togglePause);
+      document.getElementById('btn-skip').addEventListener('click', skipCurrent);
+      document.getElementById('btn-end-standup').addEventListener('click', endStandup);
+      document.getElementById('btn-new-standup').addEventListener('click', () => {
+        queue = [];
+        showScreen('setup');
+        renderShuffleZone();
+      });
+      document.getElementById('btn-back-setup').addEventListener('click', () => {
+        showScreen('setup');
+      });
+
+      loadMembers();
+      loadTimerLimit();
+      buildQueueFromOrder();
+      if (queue.length) renderShuffleZone();
+      renderMembers();
+      timerLimitValue.textContent = toPersianNum(timerLimitMinutes) + ' دقیقه';
+      timerLimitInput.value = timerLimitMinutes;
+
+      if (typeof Bale !== 'undefined' && Bale.WebApp) {
+        Bale.WebApp.ready();
+        Bale.WebApp.expand();
+        var params = Bale.WebApp.themeParams || {};
+        applyTheme(params);
+      }
+    })();
+  </script>
+</body>
+</html>
