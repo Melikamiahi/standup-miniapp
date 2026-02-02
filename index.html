@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Standup Randomizer</title>
+  <title>تصادفی‌ساز استندآپ — تیم کاروان</title>
   <script src="https://tapi.bale.ai/miniapp.js?3"></script>
   <style>
     :root {
@@ -122,6 +122,10 @@
       border: 1px solid var(--border); border-radius: 8px;
       color: var(--text); font-size: 12px; font-family: inherit;
       cursor: pointer; direction: ltr;
+      transition: border-color 0.35s ease, background 0.35s ease;
+    }
+    .settings-select:focus {
+      outline: none; border-color: rgba(56,189,248,0.4);
     }
 
     /* Shuffle Button */
@@ -156,15 +160,16 @@
     .shuffle-label {
       font-size: 14px; color: var(--accent); font-weight: 600; margin-bottom: 20px;
     }
-    .shuffle-names { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .shuffle-names { display: flex; flex-direction: column; gap: 10px; align-items: center; }
     .shuffle-name {
-      font-size: 20px; font-weight: 700; color: #f1f5f9; padding: 6px 16px;
+      font-size: 20px; font-weight: 700; color: #f1f5f9; padding: 8px 18px;
       display: flex; align-items: center; gap: 10px;
-      animation: shufflePop 0.1s ease-out;
+      animation: shuffleCalm 0.75s ease-in-out;
     }
-    @keyframes shufflePop {
-      0% { transform: scale(0.8) translateY(-10px); opacity: 0.5; }
-      100% { transform: scale(1) translateY(0); opacity: 1; }
+    @keyframes shuffleCalm {
+      0% { transform: scale(0.98); opacity: 0.7; }
+      50% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     /* Active Standup Card */
@@ -302,14 +307,15 @@
     } catch(e) {}
   }
 
-  // Fixed team members
+  const LAST_IN_ORDER_NAME = 'ملیکا میاهی';
+  // ترتیب نمایش: ملیکا میاهی همیشه آخر
   const TEAM = [
-    { id: '1', name: 'ملیکا میاهی', emoji: '💜' },
     { id: '2', name: 'عاطفه طاهری', emoji: '💙' },
     { id: '3', name: 'آراد حصادی', emoji: '💚' },
     { id: '4', name: 'فائزه گلرخان', emoji: '🧡' },
     { id: '5', name: 'عباس پورامینی', emoji: '❤️' },
     { id: '6', name: 'نوید موسوی‌نژاد', emoji: '💛' },
+    { id: '1', name: 'ملیکا میاهی', emoji: '💜' },
   ];
 
   // Load disabled members from storage
@@ -361,6 +367,14 @@
     return s;
   }
 
+  function ensureLastInOrder(order) {
+    const lastIdx = order.findIndex(m => m.name.trim() === LAST_IN_ORDER_NAME);
+    if (lastIdx === -1) return order;
+    const last = order[lastIdx];
+    const rest = order.filter((_, i) => i !== lastIdx);
+    return rest.concat([last]);
+  }
+
   function formatTime(s) {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -379,14 +393,14 @@
     render();
 
     let count = 0;
-    const maxCount = 18;
+    const maxCount = 10;
     const interval = setInterval(() => {
-      state.shuffleDisplay = shuffle(active);
+      state.shuffleDisplay = ensureLastInOrder(shuffle(active));
       render();
       count++;
       if (count >= maxCount) {
         clearInterval(interval);
-        state.order = shuffle(active);
+        state.order = ensureLastInOrder(shuffle(active));
         state.shuffleDisplay = [];
         state.isShuffling = false;
         state.currentIndex = 0;
@@ -394,7 +408,7 @@
         startTimer();
         render();
       }
-    }, 90);
+    }, 380);
   }
 
   function startTimer() {
@@ -480,7 +494,7 @@
       <div class="header">
         <div class="badge">⚡ Team Standup</div>
         <h1 class="title">نوبت‌دهی رندوم</h1>
-        <p class="subtitle">تیم پروداکت بله</p>
+        <p class="subtitle">تیم کاروان</p>
       </div>
     `;
 
